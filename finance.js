@@ -549,8 +549,14 @@ class FinanceCalculator {
                                                     <td class="text-end">${results.interestPercentage.toFixed(2)}%</td>
                                                 </tr>
                                                 <tr>
-                                                    <td>معدل الفائدة الفعلي</td>
+                                                    <td>نسبة الفائدة السنوية</td>
+                                                    <td class="text-end">${results.nominalRate.toFixed(2)}%</td>
+                                                </tr>
+                                                 <tr>
+                                                    <td>معدل الفائدة الفعلي (مع الرسوم)</td>
                                                     <td class="text-end">${results.effectiveRate.toFixed(2)}%</td>
+                                                </tr>
+
                                                 </tr>
                                             </tbody>
                                         </table>
