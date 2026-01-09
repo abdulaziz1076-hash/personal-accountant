@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>المحاسب الشخصي المتكامل - إدارة مالية شاملة</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+    <!-- نافذة تعديل المعاملة -->
+<div class="modal fade" id="editModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">تعديل البند المالي</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editId">
+                
+                <div class="mb-3">
+                    <label class="form-label">النوع</label>
+                    <select class="form-select" id="editType">
+                        <option value="income">دخل (راتب، إيرادات)</option>
+                        <option value="expense">مصروف (فاتورة، شراء)</option>
+                    </select>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">الاسم / الوصف</label>
+                    <input type="text" class="form-control" id="editName" placeholder="مثال: راتب شهر مارس">
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">المبلغ (ريال سعودي)</label>
+                    <input type="number" class="form-control" id="editAmount" placeholder="مثال: 5000">
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">التاريخ</label>
+                    <input type="date" class="form-control" id="editDate">
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">الفئة</label>
+                    <select class="form-select" id="editCategory">
+                        <!-- سيتم تعبئته تلقائياً -->
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-primary" onclick="saveEdit()">حفظ التعديلات</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- قسم إدارة المعاملات -->
+<div id="transactions" class="content-section" style="display: none;">
+    <div class="row">
+        <!-- قسم الإضافة -->
+        <div class="col-md-4">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h5><i class="fas fa-plus-circle"></i> إضافة معاملة جديدة</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">النوع</label>
+                        <select class="form-select" id="typeSelect">
+                            <option value="income">دخل (راتب، إيرادات)</option>
+                            <option value="expense">مصروف (فاتورة، شراء)</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">الاسم / الوصف</label>
+                        <input type="text" class="form-control" id="nameInput" placeholder="مثال: راتب شهر مارس">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">المبلغ (ريال سعودي)</label>
+                        <input type="number" class="form-control" id="amountInput" placeholder="مثال: 5000">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">التاريخ</label>
+                        <input type="date" class="form-control" id="dateInput">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">الفئة</label>
+                        <select class="form-select" id="categorySelect">
+                            <!-- سيتم تعبئته تلقائياً -->
+                        </select>
+                    </div>
+                    <button class="btn btn-success w-100" onclick="addTransaction()">
+                        <i class="fas fa-save"></i> حفظ البند المالي
+                    </button>
+                </div>
+            </div>
+
+            <!-- إدارة الفئات -->
+            <div class="card shadow mt-4">
+                <div class="card-header bg-info text-white">
+                    <h5><i class="fas fa-cogs"></i> إعدادات الفئات</h5>
+                </div>
+                <div class="card-body">
+                    <div class="input-group mb-3">
+                        <input type="text" class="form-control" id="newCategory" placeholder="أدخل فئة جديدة">
+                        <button class="btn btn-info" onclick="addCategory()">إضافة</button>
+                    </div>
+                    <div id="categoryList" class="small">
+                        <!-- تظهر الفئات هنا -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- قسم العرض -->
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5><i class="fas fa-list"></i> السجل المالي</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <input type="text" class="form-control" id="searchInput" placeholder="ابحث في السجل...">
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>التاريخ</th>
+                                    <th>الوصف</th>
+                                    <th>الفئة</th>
+                                    <th>النوع</th>
+                                    <th>المبلغ</th>
+                                    <th>الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="transactionTable">
+                                <!-- تظهر البيانات هنا -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- أضف هذه الأقسام أيضاً -->
+<div id="dashboard" class="content-section">
+    <!-- محتوى لوحة التحكم -->
+</div>
+
+<div id="loanCalculator" class="content-section" style="display: none;">
+    <!-- محتوى حاسبة القروض -->
+</div>
+
+<div id="budgetPlanner" class="content-section" style="display: none;">
+    <!-- محتوى الميزانية -->
+</div>
+
+<div id="financialGoals" class="content-section" style="display: none;">
+    <!-- محتوى الأهداف -->
+</div>
+<body>
+    <!-- شريط التنقل المحسن -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-gradient-primary">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-calculator me-2"></i>المحاسب الشخصي المتكامل
+                <small class="d-block fs-6 fw-normal">إدارة مالية شاملة</small>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link active" href="#dashboard"><i class="fas fa-home"></i> الرئيسية</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#transactions"><i class="fas fa-exchange-alt"></i> المعاملات</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#calculators"><i class="fas fa-calculator"></i> الحاسبات</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#reports"><i class="fas fa-chart-bar"></i> التقارير</a></li>
+                </ul>
+                <button class="btn btn-light ms-3" onclick="exportData()">
+                    <i class="fas fa-download"></i> حفظ البيانات
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- لوحة التحكم الرئيسية -->
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <!-- القائمة الجانبية -->
+            <div class="col-lg-3 col-md-4">
+                <div class="card shadow-lg border-0 mb-4">
+                    <div class="card-header bg-gradient-primary text-white">
+                        <h5><i class="fas fa-bars"></i> القائمة الرئيسية</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="list-group list-group-flush">
+                            <a href="#" class="list-group-item list-group-item-action active" onclick="showSection('dashboard')">
+                                <i class="fas fa-tachometer-alt me-2"></i>لوحة التحكم
+                            </a>
+                            <a href="#" class="list-group-item list-group-item-action" onclick="showSection('transactions')">
+                                <i class="fas fa-exchange-alt me-2"></i>إدارة المعاملات
+                            </a>
+                            <a href="#" class="list-group-item list-group-item-action" onclick="showSection('loanCalculator')">
+                                <i class="fas fa-hand-holding-usd me-2"></i>حاسبة القروض
+                            </a>
+                            <a href="#" class="list-group-item list-group-item-action" onclick="showSection('mortgageCalculator')">
+                                <i class="fas fa-home me-2"></i>حاسبة التمويل العقاري
+                            </a>
+                            <a href="#" class="list-group-item list-group-item-action" onclick="showSection('savingsCalculator')">
+                                <i class="fas fa-piggy-bank me-2"></i>حاسبة التوفير
+                            </a>
+                            <a href="#" class="list-group-item list-group-item-action" onclick="showSection('budgetPlanner')">
+                                <i class="fas fa-chart-pie me-2"></i>مخطط الميزانية
+                            </a>
+                            <a href="#" class="list-group-item list-group-item-action" onclick="showSection('financialGoals')">
+                                <i class="fas fa-bullseye me-2"></i>الأهداف المالية
+                            </a>
+                            <a href="#" class="list-group-item list-group-item-action" onclick="showSection('reports')">
+                                <i class="fas fa-file-invoice-dollar me-2"></i>التقارير المتقدمة
+                            </a>
+                            <a href="#" class="list-group-item list-group-item-action" onclick="showSection('settings')">
+                                <i class="fas fa-cog me-2"></i>الإعدادات
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ملخص سريع -->
+                <div class="card shadow border-0">
+                    <div class="card-header bg-gradient-info text-white">
+                        <h6><i class="fas fa-info-circle"></i> ملخص سريع</h6>
+                    </div>
+                    <div class="card-body p-3" id="quickSummary">
+                        <!-- سيتم ملؤه بالبيانات -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- المحتوى الرئيسي -->
+            <div class="col-lg-9 col-md-8">
+                <!-- قسم لوحة التحكم (الافتراضي) -->
+                <div id="dashboard" class="content-section">
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="card stat-card bg-gradient-success text-white">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="card-title">إجمالي الدخل</h6>
+                                            <h3 id="totalIncome">0 ر.س</h3>
+                                        </div>
+                                        <i class="fas fa-money-bill-wave fa-2x opacity-50"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card stat-card bg-gradient-danger text-white">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="card-title">إجمالي المصروفات</h6>
+                                            <h3 id="totalExpense">0 ر.س</h3>
+                                        </div>
+                                        <i class="fas fa-shopping-cart fa-2x opacity-50"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card stat-card bg-gradient-primary text-white">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="card-title">الرصيد الحالي</h6>
+                                            <h3 id="currentBalance">0 ر.س</h3>
+                                        </div>
+                                        <i class="fas fa-wallet fa-2x opacity-50"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card stat-card bg-gradient-warning text-white">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="card-title">المعاملات</h6>
+                                            <h3 id="totalTransactions">0</h3>
+                                        </div>
+                                        <i class="fas fa-exchange-alt fa-2x opacity-50"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- الرسوم البيانية -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card shadow">
+                                <div class="card-header bg-gradient-info text-white">
+                                    <h5><i class="fas fa-chart-pie"></i> توزيع المصروفات</h5>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="expensesChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card shadow">
+                                <div class="card-header bg-gradient-success text-white">
+                                    <h5><i class="fas fa-chart-line"></i> الدخل مقابل المصروفات</h5>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="incomeVsExpenseChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- آخر المعاملات -->
+                    <div class="card shadow">
+                        <div class="card-header bg-gradient-primary text-white">
+                            <h5><i class="fas fa-history"></i> آخر المعاملات</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>التاريخ</th>
+                                            <th>الوصف</th>
+                                            <th>الفئة</th>
+                                            <th>النوع</th>
+                                            <th>المبلغ</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="recentTransactions">
+                                        <!-- سيتم ملؤه بالبيانات -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- قسم إدارة المعاملات -->
+                <div id="transactions" class="content-section" style="display: none;">
+                    <!-- نفس محتوى إدارة المعاملات من النسخة السابقة -->
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="card shadow">
+                                <div class="card-header bg-gradient-success text-white">
+                                    <h5><i class="fas fa-plus-circle"></i> إضافة معاملة جديدة</h5>
+                                </div>
+                                <div class="card-body">
+                                    <!-- نموذج إضافة المعاملة -->
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="card shadow">
+                                <div class="card-header bg-gradient-primary text-white">
+                                    <h5><i class="fas fa-list"></i> السجل المالي</h5>
+                                </div>
+                                <div class="card-body">
+                                    <!-- جدول المعاملات -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- قسم حاسبة القروض -->
+                <div id="loanCalculator" class="content-section" style="display: none;">
+                    <div class="card shadow">
+                        <div class="card-header bg-gradient-warning text-white">
+                            <h4><i class="fas fa-hand-holding-usd"></i> حاسبة القروض الشخصية</h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">مبلغ القرض (ريال)</label>
+                                        <input type="number" class="form-control" id="loanAmount" placeholder="مثال: 50000" min="1000" max="1000000">
+                                        <div class="form-text">المبلغ الذي ترغب في اقتراضه</div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">مدة السداد (شهر)</label>
+                                        <input type="range" class="form-range" id="loanTermRange" min="6" max="84" step="6" value="36">
+                                        <div class="d-flex justify-content-between">
+                                            <span>6 أشهر</span>
+                                            <span id="loanTermValue">36 أشهر</span>
+                                            <span>84 أشهر</span>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">نسبة الفائدة السنوية (%)</label>
+                                        <input type="range" class="form-range" id="interestRateRange" min="1" max="20" step="0.5" value="8">
+                                        <div class="d-flex justify-content-between">
+                                            <span>1%</span>
+                                            <span id="interestRateValue">8%</span>
+                                            <span>20%</span>
+                                        </div>
+                                    </div>
+                                    <button class="btn btn-warning w-100 btn-lg" onclick="calculateLoan()">
+                                        <i class="fas fa-calculator"></i> احسب القرض
+                                    </button>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card bg-light">
+                                        <div class="card-header">
+                                            <h5>نتائج الحساب</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div id="loanResults" class="text-center">
+                                                <p class="text-muted">أدخل بيانات القرض للحصول على النتائج</p>
+                                            </div>
+                                            <div id="loanDetails" style="display: none;">
+                                                <table class="table table-sm">
+                                                    <tr><td>القسط الشهري</td><td id="monthlyPayment" class="fw-bold"></td></tr>
+                                                    <tr><td>إجمالي المبلغ</td><td id="totalPayment"></td></tr>
+                                                    <tr><td>إجمالي الفائدة</td><td id="totalInterest"></td></tr>
+                                                    <tr><td>نسبة الفائدة</td><td id="interestPercentage"></td></tr>
+                                                </table>
+                                                <button class="btn btn-outline-warning w-100" onclick="saveLoanCalculation()">
+                                                    <i class="fas fa-save"></i> حفظ الحساب
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- أقسام أخرى ستضاف هنا -->
+            </div>
+        </div>
+    </div>
+
+    <!-- النماذج المنبثقة -->
+    <!-- سيتم إضافتها هنا -->
+
+    <!-- نهاية الجسم -->
+    <footer class="footer mt-5 py-3 bg-gradient-dark text-white">
+        <div class="container text-center">
+            <p>المحاسب الشخصي المتكامل © 2023 - جميع الحقوق محفوظة</p>
+            <p class="small">تم التطوير باستخدام HTML5، CSS3، JavaScript</p>
+        </div>
+    </footer>
+
+    <!-- المكتبات المطلوبة -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- ملفات JavaScript الخاصة بالتطبيق -->
+    <script src="app.js"></script>
+    <script src="finance.js"></script>
+    <script src="charts.js"></script>
+    <script src="budget.js"></script>
+    <script src="goals.js"></script>
+    <script src="reports.js"></script>
+    
+    <!-- تهيئة التطبيق -->
+    <script>
+        // تهيئة التطبيق عند التحميل
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeApp();
+        });
+    </script>
+    
+</body>
+</html>
+
+
