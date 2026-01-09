@@ -88,7 +88,7 @@ class FinanceCalculator {
             
             // النسب
             interestPercentage: parseFloat((totalInterest / amount * 100).toFixed(2)),
-            effectiveRate: parseFloat(this.calculateEffectiveRate(amount, monthlyPayment, months).toFixed(2)),
+            effectiveRate: parseFloat(interestRate.toFixed(2)), // نفس المعدل المدخل
             
             // الرسوم
             fees: fees,
