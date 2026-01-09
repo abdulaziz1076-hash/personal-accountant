@@ -1,0 +1,52 @@
+{
+  "name": "personal-accountant",
+  "version": "2.0.0",
+  "description": "تطبيق محاسب شخصي عربي متكامل - معتمد على Render.com",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "build": "echo 'No build step required'",
+    "test": "echo 'No tests specified' && exit 0",
+    "lint": "eslint *.js",
+    "render-postbuild": "echo 'Post-build on Render completed'",
+    "deploy": "git push origin main"
+  },
+  "keywords": [
+    "finance",
+    "arabic",
+    "budget",
+    "accountant",
+    "personal-finance",
+    "render"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/username/personal-accountant.git"
+  },
+  "homepage": "https://personal-accountant.onrender.com",
+  "bugs": {
+    "url": "https://github.com/username/personal-accountant/issues"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "compression": "^1.7.4",
+    "helmet": "^7.0.0",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1",
+    "eslint": "^8.45.0"
+  },
+  "browserslist": [
+    "> 0.5%",
+    "last 2 versions",
+    "not dead"
+  ]
+}
